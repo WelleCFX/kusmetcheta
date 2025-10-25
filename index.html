@@ -338,11 +338,11 @@
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
     function getSeenSet(){ try{ const raw=localStorage.getItem(LS_SEEN); return raw? new Set(JSON.parse(raw)): new Set(); }catch(e){ return new Set(); } }
     function setSeenSet(set){ localStorage.setItem(LS_SEEN, JSON.stringify([...set])); }
-    function canOpenToday(){ const last=localStorage.getItem(LS_LAST_DATE); return last!==todayStr(); }
-    function recordToday(){ localStorage.setItem(LS_LAST_DATE, todayStr()); }
+    function canOpenToday(){ return true; }
+    function recordToday(){ /* unlimited mode */ }
     function updateLeftCounter(){ const seen=getSeenSet(); leftEl.textContent = String(Math.max(0, fortunes.length - seen.size)); }
     function updateTodayInfo(){ const last=localStorage.getItem(LS_LAST_DATE); todayInfo.textContent = last===todayStr()? 'взето':'свободно'; }
-    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} updateTodayInfo(); }
+    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} }catch(e){} updateTodayInfo(); }
 
     function updateCategoryCounters(){
       const seen = getSeenSet();
@@ -360,8 +360,7 @@
       const choice = pool[Math.floor(Math.random()*pool.length)];
       const [text, cat, emoji] = fortunes[choice];
       fortuneEl.textContent = `${emoji} ${text}  —  ${cat}`;
-      try{ addHistoryEntry(text, cat); }catch(e){}
-fortuneEl.style.borderColor = CAT_COLORS2[cat] || 'rgba(255,255,255,.12)';
+      fortuneEl.style.borderColor = CAT_COLORS2[cat] || 'rgba(255,255,255,.12)';
       if(!seen.has(String(choice))){ seen.add(String(choice)); setSeenSet(seen); }
       updateLeftCounter(); updateCategoryCounters(); recordToday(); updateLimitUI();
       fortuneEl.animate([{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:150,easing:'ease-out'});
@@ -401,21 +400,19 @@ function renderHistory(){
   if(!items.length){list.innerHTML='<li><span class="t">Няма записи още.</span><span class="d"></span></li>';return;}
   list.innerHTML=items.map(i=>`<li><span class="t">${i.cat?`<strong>${i.cat}:</strong> `:''}${i.text}</span><span class="d">${fmt(i.at)}</span></li>`).join('');
 }
-document.addEventListener('DOMContentLoaded', ()=>{
-  const historyBtn=document.getElementById('historyBtn');
-  const historyModal=document.getElementById('historyModal');
-  const historyClose=document.getElementById('historyClose');
-  const historyClose2=document.getElementById('historyClose2');
-  const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
-  const historyClear=document.getElementById('historyClear');
-  function openHistory(){ if(!historyModal) return; historyModal.classList.remove('hidden'); renderHistory(); }
-  function closeHistory(){ if(!historyModal) return; historyModal.classList.add('hidden'); }
-  historyBtn?.addEventListener('click',openHistory);
-  historyClose?.addEventListener('click',closeHistory);
-  historyClose2?.addEventListener('click',closeHistory);
-  historyCloseBackdrop?.addEventListener('click',closeHistory);
-  historyClear?.addEventListener('click',()=>{ if(confirm('Да изчистя историята?')){ saveHistory([]); renderHistory(); } });
-});
+const historyBtn=document.getElementById('historyBtn');
+const historyModal=document.getElementById('historyModal');
+const historyClose=document.getElementById('historyClose');
+const historyClose2=document.getElementById('historyClose2');
+const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
+const historyClear=document.getElementById('historyClear');
+function openHistory(){historyModal.classList.remove('hidden');renderHistory();}
+function closeHistory(){historyModal.classList.add('hidden');}
+historyBtn?.addEventListener('click',openHistory);
+historyClose?.addEventListener('click',closeHistory);
+historyClose2?.addEventListener('click',closeHistory);
+historyCloseBackdrop?.addEventListener('click',closeHistory);
+historyClear?.addEventListener('click',()=>{if(confirm('Да изчистя историята?')){saveHistory([]);renderHistory();}});
 
 // Запис на история при изтегляне
 // Търсим мястото където се изписва крайното късметче и закачаме
