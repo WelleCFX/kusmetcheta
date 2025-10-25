@@ -109,20 +109,7 @@
     @keyframes fall{
       to{ transform: translateY(110vh) rotate(360deg); opacity:0.9; }
     }
-  
-.modal.hidden{display:none}
-.modal{position:fixed;inset:0;z-index:60}
-.modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
-.modal__dialog{position:relative;margin:8vh auto 0 auto;max-width:600px;background:#111226;border:1px solid rgba(255,255,255,.12);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.4);padding:16px}
-.modal__header,.modal__footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.modal__title{font-weight:800;font-size:18px}
-.modal__body{max-height:50vh;overflow:auto;padding:8px 0}
-.history-list{list-style:none;margin:0;padding:0}
-.history-list li{padding:10px 12px;border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px}
-.history-list .t{opacity:.9}
-.history-list .d{opacity:.7;font-size:12px;white-space:nowrap}
-
-</style>
+  </style>
 </head>
 <body>
   <div class="intro" id="intro">
@@ -154,7 +141,6 @@
 
       <div class="row">
         <button id="randomBtn" class="btn-primary">🎲 Отвори късметче, Мелиса</button>
-        <button id="historyBtn" class="btn-reset">📜 История</button>
         <button id="resetBtn" class="btn-reset">🔁 Рестарт (тест)</button>
       </div>
       <div id="limitNote" class="notice hidden">Вече отвори късметче днес. Опитай утре! 🌙</div>
@@ -338,11 +324,11 @@
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
     function getSeenSet(){ try{ const raw=localStorage.getItem(LS_SEEN); return raw? new Set(JSON.parse(raw)): new Set(); }catch(e){ return new Set(); } }
     function setSeenSet(set){ localStorage.setItem(LS_SEEN, JSON.stringify([...set])); }
-    function canOpenToday(){ return true; }
-    function recordToday(){ /* unlimited mode */ }
+    function canOpenToday(){ const last=localStorage.getItem(LS_LAST_DATE); return last!==todayStr(); }
+    function recordToday(){ localStorage.setItem(LS_LAST_DATE, todayStr()); }
     function updateLeftCounter(){ const seen=getSeenSet(); leftEl.textContent = String(Math.max(0, fortunes.length - seen.size)); }
     function updateTodayInfo(){ const last=localStorage.getItem(LS_LAST_DATE); todayInfo.textContent = last===todayStr()? 'взето':'свободно'; }
-    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} }catch(e){} updateTodayInfo(); }
+    function updateLimitUI(){ if(canOpenToday()){ randomBtn.disabled=false; limitNote.classList.add('hidden'); } else { randomBtn.disabled=true; limitNote.classList.remove('hidden'); } updateTodayInfo(); }
 
     function updateCategoryCounters(){
       const seen = getSeenSet();
@@ -381,68 +367,6 @@
     // Listeners
     document.getElementById('randomBtn').addEventListener('click', pickRandom);
     document.getElementById('resetBtn').addEventListener('click', handleReset);
-  
-
-// ---- История ----
-const LS_HISTORY = 'kus_history_v1';
-function loadHistory(){try{return JSON.parse(localStorage.getItem(LS_HISTORY)||'[]')}catch(e){return[]}}
-function saveHistory(a){localStorage.setItem(LS_HISTORY,JSON.stringify(a.slice(-500)))}
-function addHistoryEntry(text,cat){
-  const now=new Date().toISOString();
-  const arr=loadHistory();
-  arr.push({text,cat,at:now});
-  saveHistory(arr);
-}
-function fmt(d){return new Date(d).toLocaleString('bg-BG',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
-function renderHistory(){
-  const list=document.getElementById('historyList');
-  const items=loadHistory().slice().reverse();
-  if(!items.length){list.innerHTML='<li><span class="t">Няма записи още.</span><span class="d"></span></li>';return;}
-  list.innerHTML=items.map(i=>`<li><span class="t">${i.cat?`<strong>${i.cat}:</strong> `:''}${i.text}</span><span class="d">${fmt(i.at)}</span></li>`).join('');
-}
-const historyBtn=document.getElementById('historyBtn');
-const historyModal=document.getElementById('historyModal');
-const historyClose=document.getElementById('historyClose');
-const historyClose2=document.getElementById('historyClose2');
-const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
-const historyClear=document.getElementById('historyClear');
-function openHistory(){historyModal.classList.remove('hidden');renderHistory();}
-function closeHistory(){historyModal.classList.add('hidden');}
-historyBtn?.addEventListener('click',openHistory);
-historyClose?.addEventListener('click',closeHistory);
-historyClose2?.addEventListener('click',closeHistory);
-historyCloseBackdrop?.addEventListener('click',closeHistory);
-historyClear?.addEventListener('click',()=>{if(confirm('Да изчистя историята?')){saveHistory([]);renderHistory();}});
-
-// Запис на история при изтегляне
-// Търсим мястото където се изписва крайното късметче и закачаме
-const _origShowFortune = window.showFortune;
-if (typeof _origShowFortune === 'function'){
-  window.showFortune = function(text, cat){
-    try{ addHistoryEntry(String(text||''), String(cat||'')); }catch(e){}
-    return _origShowFortune.apply(this, arguments);
-  }
-}
-
-</script>
-
-<!-- HISTORY MODAL -->
-<div id="historyModal" class="modal hidden">
-  <div class="modal__backdrop" id="historyCloseBackdrop"></div>
-  <div class="modal__dialog">
-    <div class="modal__header">
-      <div class="modal__title">История на късметчетата</div>
-      <button id="historyClose" class="chip">✖</button>
-    </div>
-    <div class="modal__body">
-      <ul id="historyList" class="history-list"></ul>
-    </div>
-    <div class="modal__footer">
-      <button id="historyClear" class="chip">🧹 Изчисти</button>
-      <button id="historyClose2" class="chip">Затвори</button>
-    </div>
-  </div>
-</div>
-
+  </script>
 </body>
 </html>
