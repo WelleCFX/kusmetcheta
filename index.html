@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>H-BDAY,LOVE 💌</title>
-  <meta name="description" content="Късметчета до края на годината за моята най-голяма ЛЮБОВ!">
+  <meta name="description" content="73 късметчета за Мелиса – по едно на ден. С любов.">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Късметчета">
@@ -128,8 +128,8 @@
   <div class="intro" id="intro">
     <div class="intro-card">
       <h2>Здравей, Любов 💖</h2>
-      <p id="introText">Готова ли си за днешното късметче?</p>
-      <button id="introBtn" class="btn-primary">Да! Продължи</button>
+      <p>Готова ли си за днешното късметче?</p>
+      <button id="introBtn" class="btn-primary">Да! Отвори го 🎲</button>
     </div>
     <div class="confetti" id="confetti"></div>
   </div>
@@ -138,7 +138,9 @@
     <div class="card">
       <h1>Честит рожден ден, любов! 💌</h1>
       <div class="subtitle">Честит рожден ден, Любов!.</div>
-      <div class="subtitle">Желая ти най-вече да си жива и здрава,любовта,грижата и щастието ще ти го дам!</div>
+	  
+	  <div class="subtitle">Желая ти най-вече да си жива и здрава,любовта,грижата и щастието ще ти го дам!</div>
+	  
       <div class="subtitle">Приготвил съм ти по-едно късметче за всеки ден до нова година, не забравяй да го отваряш!</div>
 
       <div id="fortune" class="fortune">Натисни „Отвори късметче, Мелиса“ 🎲</div>
@@ -153,7 +155,7 @@
       <div class="row">
         <button id="randomBtn" class="btn-primary">🎲 Отвори късметче, Мелиса</button>
         <button id="historyBtn" class="btn-reset">📜 История</button>
-        <!--button id="resetBtn" class="btn-reset">🔁 Рестарт (тест)</button-->
+        <button id="resetBtn" class="btn-reset">🔁 Рестарт (тест)</button>
       </div>
       <div id="limitNote" class="notice hidden">Вече отвори късметче днес. Опитай утре! 🌙</div>
 
@@ -162,63 +164,6 @@
   </div>
 
   <script>
-    // --- HAPTIC ---
-    const ENABLE_HAPTIC = true;
-    function haptic(pattern='strong'){
-      if (!ENABLE_HAPTIC) return;
-      // 1) Native vibrate (Android / some browsers)
-      try {
-        if (navigator.vibrate) {
-          if (pattern === 'light') navigator.vibrate(15);
-          else if (pattern === 'medium') navigator.vibrate([20, 30, 20]);
-          else navigator.vibrate([25, 40, 25, 40, 15]); // strong: double + tail
-          return;
-        }
-      } catch(e){}
-
-      // 2) WebAudio "tap" for iPhone (very low volume clicks, two pulses for strong)
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const createPulse = (startTime, freq=110, gainPeak=0.06, dur=0.10)=>{
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = 'square';
-          o.frequency.value = freq;
-          g.gain.value = 0.0001;
-          o.connect(g); g.connect(ctx.destination);
-          // quick attack -> decay
-          g.gain.setValueAtTime(0.0001, startTime);
-          g.gain.exponentialRampToValueAtTime(gainPeak, startTime + 0.012);
-          g.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
-          o.start(startTime);
-          o.stop(startTime + dur + 0.01);
-        };
-        const now = ctx.currentTime + 0.01;
-        if (pattern === 'light'){
-          createPulse(now, 140, 0.04, 0.08);
-          setTimeout(()=>ctx.close(), 180);
-        } else if (pattern === 'medium'){
-          createPulse(now, 120, 0.06, 0.10);
-          createPulse(now + 0.13, 90, 0.05, 0.09);
-          setTimeout(()=>ctx.close(), 260);
-        } else {
-          // strong = triple tap: low + lower + brief tail
-          createPulse(now, 120, 0.08, 0.11);
-          createPulse(now + 0.14, 85, 0.07, 0.11);
-          createPulse(now + 0.29, 150, 0.05, 0.06);
-          setTimeout(()=>ctx.close(), 380);
-        }
-      } catch(e){}
-
-      // 3) subtle visual bump (always safe)
-      try {
-        const btn = document.getElementById('randomBtn');
-        if (btn) {
-          btn.animate([{transform:'scale(0.98)'},{transform:'scale(1)'}], {duration:160, easing:'ease-out'});
-        }
-      } catch(e){}
-    }
-
     // PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -226,7 +171,39 @@
       });
     }
 
-    // Category colors
+    // Intro overlay logic — show on *every* app open
+    const introEl = document.getElementById('intro');
+    const introBtn = document.getElementById('introBtn');
+    function showIntro(){
+      introEl.classList.remove('hidden');
+      launchConfetti();
+    }
+    function hideIntro(){
+      introEl.classList.add('hidden');
+    }
+    introBtn.addEventListener('click', ()=>{
+      hideIntro();
+      document.getElementById('randomBtn').focus();
+    });
+    // show immediately on load
+    document.addEventListener('DOMContentLoaded', showIntro);
+
+    function launchConfetti(){
+      const c = document.getElementById('confetti');
+      c.innerHTML = '';
+      const emojis = ['💖','✨','🎉','💕','🌟','💫'];
+      for(let i=0;i<40;i++){
+        const s = document.createElement('span');
+        s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        s.style.left = Math.random()*100 + 'vw';
+        s.style.top = - (Math.random()*20 + 5) + 'vh';
+        s.style.animationDuration = (Math.random()*2 + 3) + 's';
+        s.style.opacity = 0.8;
+        c.appendChild(s);
+        setTimeout(()=> s.remove(), 6000);
+      }
+    }
+
     const CAT_COLORS = {
       "Романтика":"#ff6ec7",
       "Спомени":"#76c7ff",
@@ -238,8 +215,8 @@
     };
     const CAT_NAMES = Object.keys(CAT_COLORS);
 
-    // Fortunes (user list)
     const fortunes = [
+      // Романтика (13)
       ["Обичам те, както не съм обичал никого до сега!.", "Романтика", "❤️"],
       ["До теб се чувствам у дома!", "Романтика", "🏡"],
       ["Ти правиш и обикновения ден специален!", "Романтика", "✨"],
@@ -253,6 +230,8 @@
       ["Дори когато мълчим, сърцето ми говори с твоето!", "Романтика", "💘"],
       ["Ти си моето утре, което чакам с усмивка!", "Романтика", "🌞"],
       ["С теб „завинаги“ звучи като план, не мечта!", "Романтика", "∞"],
+
+      // Спомени (10)
       ["Никога няма да забравя първата ни среща около колата.", "Спомени", "🚘"],
       ["Почивките ни са моите любими спомени.", "Спомени", "🌴"],
       ["Помниш ли първата вечер, когато се смеехме до късно?", "Спомени", "🌃"],
@@ -263,6 +242,8 @@
       ["Любимият ми спомен е просто да съм до теб.", "Спомени", "🥰"],
       ["Помниш ли как се забавлявахме на плажа в Гърция ?", "Спомени", "🏖️"],
       ["Ти правиш дори скучните моменти незабравими.", "Спомени", "🌟"],
+
+      // Жестове (10)
       ["Тази седмица ти дължа по-един масаж всеки ден!", "Жестове", "💆‍♀️"],
       ["Утре ще гушкам повече от обикновено.", "Жестове", "🤗"],
       ["Следващата разходка е само за нас двамата.", "Жестове", "🚶‍♀️"],
@@ -273,6 +254,8 @@
       ["Тази вечер е само за нас двамата!", "Жестове", "🕯️"],
       ["Ще те развеселя, дори ако денят е тежък.", "Жестове", "😇"],
       ["Малки жестове за теб, за да знаеш колко значиш.", "Жестове", "🌸"],
+
+      // Смях (10)
       ["Ако оцелеем след маджуна… ще оцелеем след всичко!", "Смях", "😂"],
       ["Y1312BA = нашето тайно любовно такси.", "Смях", "🚗"],
       ["Помниш ли как се смеехме до сълзи на последната ни почивка?", "Смях", "😆"],
@@ -283,6 +266,8 @@
       ["Тази година хвана букета,догодина мисля да го държиш!", "Смях", "🔔"],
       ["Важно е, че имаме „нашите“ глупави моменти.", "Смях", "😅"],
       ["Маджунът беше катастрофа, но аз съм щастлив оцелял 😎", "Смях", "😎"],
+
+      // Мечти (10)
       ["Един ден ще отидем на място, където няма никой освен нас!", "Мечти", "🌌"],
       ["Искам да правим повече спонтанни пътувания!", "Мечти", "✈️"],
       ["Обещавам, че винаги ще бъда до теб и ще те обичам!", "Мечти", "🤝"],
@@ -293,6 +278,8 @@
       ["Да си имаме наша неделна традиция!", "Мечти", "🗓️"],
       ["Да имаме копие на нас, но да е с твоите очи!", "Мечти", "🍝"],
       ["Албум „нашият живот“ – снимка всеки месец!", "Мечти", "📔"],
+
+      // Палаво (10)
       ["Тази седмица ти забранявам да заспиваш… без да ме целунеш.", "Палаво", "😈"],
       ["Не мога да спра да мисля за теб… и за твоето тяло.", "Палаво", "😏"],
       ["Маджунът беше само началото на нашите приключения 😉", "Палаво", "😜"],
@@ -303,6 +290,8 @@
       ["Имаш един ваучер за дълги целувки.", "Палаво", "💋"],
       ["Разходка с ръце под якето – само нашата тайна.", "Палаво", "🫶"],
       ["Вечер със свещи, музика и… останалото ще измислим.", "Палаво", "🕯️"],
+
+      // Изненада (10)
       ["Татуировка по-твой избор.", "Изненада", "✍️"],
       ["Тайна бележка в чантата ти.", "Изненада", "📝"],
       ["Вечеря „изненада“ – готвя аз.", "Изненада", "🍽️"],
@@ -324,51 +313,45 @@
     const resetBtn = document.getElementById('resetBtn');
     const todayInfo = document.getElementById('todayInfo');
 
-    const introEl = document.getElementById('intro');
-    const introBtn = document.getElementById('introBtn');
-    const introText = document.getElementById('introText');
-    const confettiEl = document.getElementById('confetti');
+    const LS_SEEN = 'seenFortunes_v7';
+    const LS_LAST_DATE = 'lastOpenDate_v7';
 
-    const LS_SEEN = 'seenFortunes_v9';
-    const LS_LAST_DATE = 'lastOpenDate_v9';
-
-    // Helpers
-    function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-    function getSeenSet(){ try{ const raw=localStorage.getItem(LS_SEEN); return raw? new Set(JSON.parse(raw)): new Set(); }catch(e){ return new Set(); } }
-    function setSeenSet(set){ localStorage.setItem(LS_SEEN, JSON.stringify([...set])); }
-    function canOpenToday(){ return true; }
-    function recordToday(){ /* unlimited mode: no-op */ }
-
-    // UI updates
-    function updateLeftCounter(){ const seen=getSeenSet(); leftEl.textContent = String(Math.max(0, fortunes.length - seen.size)); }
-    function updateTodayInfo(){ const last=localStorage.getItem(LS_LAST_DATE); todayInfo.textContent = last===todayStr()? 'взето':'свободно'; }
-    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} updateTodayInfo(); }
-
-    // Category chips & counters
+    // Build chips with counters
+    const CAT_COLORS2 = {"Романтика":"#ff6ec7","Спомени":"#76c7ff","Жестове":"#66ffa3","Смях":"#ffd166","Мечти":"#a2ffea","Палаво":"#c18cff","Изненада":"#ff9f7f"};
     const CAT_COL_COUNTER = {}; // name -> span
+    const CAT_NAMES2 = Object.keys(CAT_COLORS2);
     function buildCategoryChips(){
       cats.innerHTML='';
       const totals = {};
       fortunes.forEach(f=> totals[f[1]]=(totals[f[1]]||0)+1);
-      CAT_NAMES.forEach(name=>{
+      CAT_NAMES2.forEach(name=>{
         const chip = document.createElement('span');
         chip.className='chip'; chip.dataset.cat=name;
-        const dot = document.createElement('span'); dot.className='dot'; dot.style.backgroundColor = CAT_COLORS[name];
+        const dot = document.createElement('span'); dot.className='dot'; dot.style.backgroundColor = CAT_COLORS2[name];
         const countSpan = document.createElement('span'); countSpan.className='count'; countSpan.textContent = totals[name]||0;
         chip.append(dot, document.createTextNode(' '+name+' · '), countSpan);
         cats.appendChild(chip);
         CAT_COL_COUNTER[name]=countSpan;
       });
     }
+
+    function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+    function getSeenSet(){ try{ const raw=localStorage.getItem(LS_SEEN); return raw? new Set(JSON.parse(raw)): new Set(); }catch(e){ return new Set(); } }
+    function setSeenSet(set){ localStorage.setItem(LS_SEEN, JSON.stringify([...set])); }
+    function canOpenToday(){ const last=localStorage.getItem(LS_LAST_DATE); return last!==todayStr(); }
+    function recordToday(){ localStorage.setItem(LS_LAST_DATE, todayStr()); }
+    function updateLeftCounter(){ const seen=getSeenSet(); leftEl.textContent = String(Math.max(0, fortunes.length - seen.size)); }
+    function updateTodayInfo(){ const last=localStorage.getItem(LS_LAST_DATE); todayInfo.textContent = last===todayStr()? 'взето':'свободно'; }
+    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} updateTodayInfo(); }
+
     function updateCategoryCounters(){
       const seen = getSeenSet();
       const totals = {}; fortunes.forEach(f=> totals[f[1]]=(totals[f[1]]||0)+1);
       const remaining = {...totals};
       seen.forEach(s=>{ const i=parseInt(s,10); if(!isNaN(i) && fortunes[i]){ const c=fortunes[i][1]; remaining[c]=Math.max(0,(remaining[c]||0)-1); } });
-      CAT_NAMES.forEach(n=>{ if(CAT_COL_COUNTER[n]) CAT_COL_COUNTER[n].textContent = String(remaining[n]||0); });
+      CAT_NAMES2.forEach(n=>{ if(CAT_COL_COUNTER[n]) CAT_COL_COUNTER[n].textContent = String(remaining[n]||0); });
     }
 
-    // Fortune logic
     function pickRandom(){
       if(!canOpenToday()){ updateLimitUI(); return; }
       const seen=getSeenSet(); const rem=[];
@@ -376,45 +359,11 @@
       const pool = rem.length? rem : [...Array(fortunes.length).keys()];
       const choice = pool[Math.floor(Math.random()*pool.length)];
       const [text, cat, emoji] = fortunes[choice];
-      $1
-  addHistoryEntry(text, cat);
-      fortuneEl.style.borderColor = CAT_COLORS[cat] || 'rgba(255,255,255,.12)';
+      fortuneEl.textContent = `${emoji} ${text}  —  ${cat}`;
+      fortuneEl.style.borderColor = CAT_COLORS2[cat] || 'rgba(255,255,255,.12)';
       if(!seen.has(String(choice))){ seen.add(String(choice)); setSeenSet(seen); }
       updateLeftCounter(); updateCategoryCounters(); recordToday(); updateLimitUI();
       fortuneEl.animate([{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:150,easing:'ease-out'});
-      haptic('strong'); // STRONG haptic on draw
-    }
-
-    // Intro overlay — every open, button only closes
-    function showIntro(){
-      const canOpen = canOpenToday();
-      introText.textContent = canOpen ? "Готова ли си за днешното късметче?" : "Днес вече отвори късметче, любов..";
-      introBtn.textContent = canOpen ? "Да! Продължи" : "Ок";
-      introEl.classList.remove('hidden');
-      if (canOpen) { launchConfetti(); } else { confettiEl.innerHTML = ""; }
-    }
-    function hideIntro(){ introEl.classList.add('hidden'); }
-    introBtn.addEventListener('click', ()=>{
-      hideIntro();
-      updateLimitUI();
-      haptic('light'); // light tap on intro close
-    });
-    document.addEventListener('DOMContentLoaded', showIntro);
-
-    function launchConfetti(){
-      const c = confettiEl;
-      c.innerHTML = '';
-      const emojis = ['💖','✨','🎉','💕','🌟','💫'];
-      for(let i=0;i<40;i++){
-        const s = document.createElement('span');
-        s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-        s.style.left = Math.random()*100 + 'vw';
-        s.style.top = - (Math.random()*20 + 5) + 'vh';
-        s.style.animationDuration = (Math.random()*2 + 3) + 's';
-        s.style.opacity = 0.8;
-        c.appendChild(s);
-        setTimeout(()=> s.remove(), 6000);
-      }
     }
 
     function handleReset(){
@@ -423,7 +372,7 @@
       fortuneEl.textContent = "Нулирано ✅ Натисни „Отвори късметче, Мелиса“ 🎲";
       fortuneEl.style.borderColor = 'rgba(255,255,255,.12)';
       updateLeftCounter(); updateCategoryCounters(); updateLimitUI();
-      showIntro(); // show intro again for testing
+      showIntro(); // show intro again immediately for testing
     }
 
     // Init
@@ -431,8 +380,9 @@
 
     // Listeners
     document.getElementById('randomBtn').addEventListener('click', pickRandom);
-    //document.getElementById('resetBtn').addEventListener('click', handleReset);
+    document.getElementById('resetBtn').addEventListener('click', handleReset);
   
+
 // ---- История ----
 const LS_HISTORY = 'kus_history_v1';
 function loadHistory(){try{return JSON.parse(localStorage.getItem(LS_HISTORY)||'[]')}catch(e){return[]}}
@@ -463,6 +413,16 @@ historyClose?.addEventListener('click',closeHistory);
 historyClose2?.addEventListener('click',closeHistory);
 historyCloseBackdrop?.addEventListener('click',closeHistory);
 historyClear?.addEventListener('click',()=>{if(confirm('Да изчистя историята?')){saveHistory([]);renderHistory();}});
+
+// Запис на история при изтегляне
+// Търсим мястото където се изписва крайното късметче и закачаме
+const _origShowFortune = window.showFortune;
+if (typeof _origShowFortune === 'function'){
+  window.showFortune = function(text, cat){
+    try{ addHistoryEntry(String(text||''), String(cat||'')); }catch(e){}
+    return _origShowFortune.apply(this, arguments);
+  }
+}
 
 </script>
 
