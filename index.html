@@ -328,7 +328,7 @@
     // UI updates
     function updateLeftCounter(){ const seen=getSeenSet(); leftEl.textContent = String(Math.max(0, fortunes.length - seen.size)); }
     function updateTodayInfo(){ const last=localStorage.getItem(LS_LAST_DATE); todayInfo.textContent = last===todayStr()? 'взето':'свободно'; }
-    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} } else { randomBtn.disabled=true; limitNote.classList.remove('hidden'); } updateTodayInfo(); }
+    function updateLimitUI(){ try{ randomBtn.disabled=false; limitNote.classList.add('hidden'); if (todayInfo) todayInfo.textContent='без лимит'; }catch(e){} updateTodayInfo(); }
 
     // Category chips & counters
     const CAT_COL_COUNTER = {}; // name -> span
