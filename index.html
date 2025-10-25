@@ -360,7 +360,8 @@
       const choice = pool[Math.floor(Math.random()*pool.length)];
       const [text, cat, emoji] = fortunes[choice];
       fortuneEl.textContent = `${emoji} ${text}  —  ${cat}`;
-      fortuneEl.style.borderColor = CAT_COLORS2[cat] || 'rgba(255,255,255,.12)';
+      try{ addHistoryEntry(text, cat); }catch(e){}
+fortuneEl.style.borderColor = CAT_COLORS2[cat] || 'rgba(255,255,255,.12)';
       if(!seen.has(String(choice))){ seen.add(String(choice)); setSeenSet(seen); }
       updateLeftCounter(); updateCategoryCounters(); recordToday(); updateLimitUI();
       fortuneEl.animate([{transform:'scale(0.98)'},{transform:'scale(1)'}],{duration:150,easing:'ease-out'});
@@ -400,19 +401,21 @@ function renderHistory(){
   if(!items.length){list.innerHTML='<li><span class="t">Няма записи още.</span><span class="d"></span></li>';return;}
   list.innerHTML=items.map(i=>`<li><span class="t">${i.cat?`<strong>${i.cat}:</strong> `:''}${i.text}</span><span class="d">${fmt(i.at)}</span></li>`).join('');
 }
-const historyBtn=document.getElementById('historyBtn');
-const historyModal=document.getElementById('historyModal');
-const historyClose=document.getElementById('historyClose');
-const historyClose2=document.getElementById('historyClose2');
-const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
-const historyClear=document.getElementById('historyClear');
-function openHistory(){historyModal.classList.remove('hidden');renderHistory();}
-function closeHistory(){historyModal.classList.add('hidden');}
-historyBtn?.addEventListener('click',openHistory);
-historyClose?.addEventListener('click',closeHistory);
-historyClose2?.addEventListener('click',closeHistory);
-historyCloseBackdrop?.addEventListener('click',closeHistory);
-historyClear?.addEventListener('click',()=>{if(confirm('Да изчистя историята?')){saveHistory([]);renderHistory();}});
+document.addEventListener('DOMContentLoaded', ()=>{
+  const historyBtn=document.getElementById('historyBtn');
+  const historyModal=document.getElementById('historyModal');
+  const historyClose=document.getElementById('historyClose');
+  const historyClose2=document.getElementById('historyClose2');
+  const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
+  const historyClear=document.getElementById('historyClear');
+  function openHistory(){ if(!historyModal) return; historyModal.classList.remove('hidden'); renderHistory(); }
+  function closeHistory(){ if(!historyModal) return; historyModal.classList.add('hidden'); }
+  historyBtn?.addEventListener('click',openHistory);
+  historyClose?.addEventListener('click',closeHistory);
+  historyClose2?.addEventListener('click',closeHistory);
+  historyCloseBackdrop?.addEventListener('click',closeHistory);
+  historyClear?.addEventListener('click',()=>{ if(confirm('Да изчистя историята?')){ saveHistory([]); renderHistory(); } });
+});
 
 // Запис на история при изтегляне
 // Търсим мястото където се изписва крайното късметче и закачаме
