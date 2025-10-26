@@ -314,8 +314,7 @@
     const todayInfo = document.getElementById('todayInfo');
 
     const LS_SEEN = 'seenFortunes_v7';
-    const LS_LAST_DATE = 'lastOpenDate_v7';
-
+    
     // Build chips with counters
     const CAT_COLORS2 = {"Романтика":"#ff6ec7","Спомени":"#76c7ff","Жестове":"#66ffa3","Смях":"#ffd166","Мечти":"#a2ffea","Палаво":"#c18cff","Изненада":"#ff9f7f"};
     const CAT_COL_COUNTER = {}; // name -> span
@@ -338,11 +337,10 @@
     function todayStr(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
     function getSeenSet(){ try{ const raw=localStorage.getItem(LS_SEEN); return raw? new Set(JSON.parse(raw)): new Set(); }catch(e){ return new Set(); } }
     function setSeenSet(set){ localStorage.setItem(LS_SEEN, JSON.stringify([...set])); }
-    function canOpenToday(){try{const d=localStorage.getItem('fortune_last');const c=parseInt(localStorage.getItem('fortune_count')||'0');const t=new Date().toISOString().slice(0,10);if(d!==t){localStorage.setItem('fortune_last',t);localStorage.setItem('fortune_count','0');return true;}return c<10;}catch(e){return true;}}
-    function recordToday(){try{const t=new Date().toISOString().slice(0,10);const d=localStorage.getItem('fortune_last');let c=parseInt(localStorage.getItem('fortune_count')||'0');if(d!==t){localStorage.setItem('fortune_last',t);c=0;}c++;localStorage.setItem('fortune_count',String(c));}catch(e){}}
+    function canOpenToday(){ try{  const t=new Date().toISOString().slice(0,10);  const d=localStorage.getItem('fortune_last');  let c=parseInt(localStorage.getItem('fortune_count')||'0');  if(d!==t){ localStorage.setItem('fortune_last',t); localStorage.setItem('fortune_count','0'); return true; }  return c<10; }catch(e){ return true; }}return c<10;}catch(e){return true;}}
+    function recordToday(){ try{  const t=new Date().toISOString().slice(0,10);  const d=localStorage.getItem('fortune_last');  let c=parseInt(localStorage.getItem('fortune_count')||'0');  if(d!==t){ localStorage.setItem('fortune_last',t); c=0; }  c++; localStorage.setItem('fortune_count', String(c)); }catch(e){}}c++;localStorage.setItem('fortune_count',String(c));}catch(e){}}
     function updateLeftCounter(){ const seen=getSeenSet(); leftEl.textContent = String(Math.max(0, fortunes.length - seen.size)); }
-    function updateTodayInfo(){ const last=localStorage.getItem(LS_LAST_DATE); todayInfo.textContent = last===todayStr()? 'взето':'свободно'; }
-    function updateLimitUI(){try{const btn=document.getElementById('randomBtn');const note=document.getElementById('limitNote');const info=window.todayInfo||document.getElementById('todayInfo');const t=new Date().toISOString().slice(0,10);const d=localStorage.getItem('fortune_last');let c=parseInt(localStorage.getItem('fortune_count')||'0');if(d!==t){c=0;localStorage.setItem('fortune_last',t);localStorage.setItem('fortune_count','0');}const left=Math.max(0,10-c);if(info){info.textContent='Остатък днес: '+left+' / 10';}if(btn){btn.disabled = (left<=0);}if(note){if(left<=0){note.classList.remove('hidden');}else{note.classList.add('hidden');}}}catch(e){}}catch(e){} updateTodayInfo(); }
+        function updateLimitUI(){ try{  const btn=document.getElementById('randomBtn');  const note=document.getElementById('limitNote');  const info=document.getElementById('todayInfo');  const t=new Date().toISOString().slice(0,10);  const d=localStorage.getItem('fortune_last');  let c=parseInt(localStorage.getItem('fortune_count')||'0');  if(d!==t){ c=0; localStorage.setItem('fortune_last',t); localStorage.setItem('fortune_count','0'); }  const left=Math.max(0,10-c);  if(info){ info.textContent = 'Остатък днес: '+left+' / 10'; }  if(btn){ btn.disabled = (left<=0); }  if(note){ if(left<=0){ note.classList.remove('hidden'); } else { note.classList.add('hidden'); } } }catch(e){}}const left=Math.max(0,10-c);if(info){info.textContent='Остатък днес: '+left+' / 10';}if(btn){btn.disabled = (left<=0);}if(note){if(left<=0){note.classList.remove('hidden');}else{note.classList.add('hidden');}}}catch(e){}}catch(e){} }
 
     function updateCategoryCounters(){
       const seen = getSeenSet();
@@ -360,6 +358,7 @@
       const choice = pool[Math.floor(Math.random()*pool.length)];
       const [text, cat, emoji] = fortunes[choice];
       fortuneEl.textContent = `${emoji} ${text}  —  ${cat}`;
+      try{ addHistoryEntry(text, cat); }catch(e){}
       fortuneEl.style.borderColor = CAT_COLORS2[cat] || 'rgba(255,255,255,.12)';
       if(!seen.has(String(choice))){ seen.add(String(choice)); setSeenSet(seen); }
       updateLeftCounter(); updateCategoryCounters(); recordToday(); updateLimitUI();
@@ -368,7 +367,9 @@
 
     function handleReset(){
       localStorage.removeItem(LS_SEEN);
-      localStorage.removeItem(LS_LAST_DATE);
+      localStorage.removeItem('fortune_last');
+      localStorage.removeItem('fortune_count');
+      localStorage.removeItem('kus_history_v1');
       fortuneEl.textContent = "Нулирано ✅ Натисни „Отвори късметче, Мелиса“ 🎲";
       fortuneEl.style.borderColor = 'rgba(255,255,255,.12)';
       updateLeftCounter(); updateCategoryCounters(); updateLimitUI();
@@ -400,19 +401,21 @@ function renderHistory(){
   if(!items.length){list.innerHTML='<li><span class="t">Няма записи още.</span><span class="d"></span></li>';return;}
   list.innerHTML=items.map(i=>`<li><span class="t">${i.cat?`<strong>${i.cat}:</strong> `:''}${i.text}</span><span class="d">${fmt(i.at)}</span></li>`).join('');
 }
-const historyBtn=document.getElementById('historyBtn');
-const historyModal=document.getElementById('historyModal');
-const historyClose=document.getElementById('historyClose');
-const historyClose2=document.getElementById('historyClose2');
-const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
-const historyClear=document.getElementById('historyClear');
-function openHistory(){historyModal.classList.remove('hidden');renderHistory();}
-function closeHistory(){historyModal.classList.add('hidden');}
-historyBtn?.addEventListener('click',openHistory);
-historyClose?.addEventListener('click',closeHistory);
-historyClose2?.addEventListener('click',closeHistory);
-historyCloseBackdrop?.addEventListener('click',closeHistory);
-historyClear?.addEventListener('click',()=>{if(confirm('Да изчистя историята?')){saveHistory([]);renderHistory();}});
+document.addEventListener('DOMContentLoaded', ()=>{
+  const historyBtn=document.getElementById('historyBtn');
+  const historyModal=document.getElementById('historyModal');
+  const historyClose=document.getElementById('historyClose');
+  const historyClose2=document.getElementById('historyClose2');
+  const historyCloseBackdrop=document.getElementById('historyCloseBackdrop');
+  const historyClear=document.getElementById('historyClear');
+  function openHistory(){ historyModal.classList.remove('hidden'); renderHistory(); }
+  function closeHistory(){ historyModal.classList.add('hidden'); }
+  historyBtn?.addEventListener('click',openHistory);
+  historyClose?.addEventListener('click',closeHistory);
+  historyClose2?.addEventListener('click',closeHistory);
+  historyCloseBackdrop?.addEventListener('click',closeHistory);
+  historyClear?.addEventListener('click',()=>{ if(confirm('Да изчистя историята?')){ saveHistory([]); renderHistory(); } });
+});
 
 // Запис на история при изтегляне
 // Търсим мястото където се изписва крайното късметче и закачаме
@@ -427,42 +430,22 @@ if (typeof _origShowFortune === 'function'){
 </script>
 
 <!-- HISTORY MODAL -->
-<div id="historyModal" class="modal hidden">
-  <div class="modal__backdrop" id="historyCloseBackdrop"></div>
-  <div class="modal__dialog">
-    <div class="modal__header">
-      <div class="modal__title">История на късметчетата</div>
-      <button id="historyClose" class="chip">✖</button>
+<div id=\"historyModal\" class=\"modal hidden\">
+  <div class=\"modal__backdrop\" id=\"historyCloseBackdrop\"></div>
+  <div class=\"modal__dialog\">
+    <div class=\"modal__header\">
+      <div class=\"modal__title\">История на късметчетата</div>
+      <button id=\"historyClose\" class=\"chip\">✖</button>
     </div>
-    <div class="modal__body">
-      <ul id="historyList" class="history-list"></ul>
+    <div class=\"modal__body\">
+      <ul id=\"historyList\" class=\"history-list\"></ul>
     </div>
-    <div class="modal__footer">
-      <button id="historyClear" class="chip">🧹 Изчисти</button>
-      <button id="historyClose2" class="chip">Затвори</button>
+    <div class=\"modal__footer\">
+      <button id=\"historyClear\" class=\"chip\">🧹 Изчисти</button>
+      <button id=\"historyClose2\" class=\"chip\">Затвори</button>
     </div>
   </div>
 </div>
-
-
-<script>
-// Hook pickRandom to enforce 10/day and record usage
-(function(){
-  if (window._origPickRandomHooked) return;
-  window._origPickRandomHooked = true;
-  const orig = window.pickRandom;
-  if (typeof orig === 'function'){
-    window.pickRandom = async function(){
-      if (!canOpenToday()){ updateLimitUI(); return; }
-      const r = await orig.apply(this, arguments);
-      try{ recordToday(); updateLimitUI(); }catch(e){}
-      return r;
-    }
-  }
-  // On load, sync UI
-  document.addEventListener('DOMContentLoaded', updateLimitUI);
-})();
-</script>
 
 </body>
 </html>
